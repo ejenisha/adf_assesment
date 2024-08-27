@@ -1,6 +1,9 @@
 {
 	"name": "DF_Cleaning Customers",
 	"properties": {
+		"folder": {
+			"name": "First Assesment"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [

@@ -1,6 +1,9 @@
 {
 	"name": "DF_Reporting",
 	"properties": {
+		"folder": {
+			"name": "First Assesment"
+		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
 			"sources": [
