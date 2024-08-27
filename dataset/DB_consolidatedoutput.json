@@ -1,0 +1,17 @@
+{
+	"name": "DB_consolidatedoutput",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DB_consolidateddb",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "raw",
+			"table": "consolidated"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

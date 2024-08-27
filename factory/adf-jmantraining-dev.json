@@ -1,0 +1,9 @@
+{
+	"name": "adf-jmantraining-dev",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d6f7be25-0fd8-42d5-b97b-cf7437807cc6",
+		"tenantId": "2800c0a0-70e9-49be-8733-faeaa6aced99"
+	}
+}
