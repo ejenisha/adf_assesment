@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'DB_consolidateddb'"
 		},
+		"DB_stagingtoprep_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DB_stagingtoprep'"
+		},
 		"LS_mergecustomers_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_mergecustomers'"
@@ -40,6 +44,18 @@
 			"defaultValue": "sqldb-jmanTraining"
 		},
 		"DB_consolidateddb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "jenisha"
+		},
+		"DB_stagingtoprep_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "jman-training.database.windows.net"
+		},
+		"DB_stagingtoprep_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb-jmanTraining"
+		},
+		"DB_stagingtoprep_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "jenisha"
 		}
@@ -619,6 +635,58 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/PL_Move Data to Prep')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Move Data from Staging to Prep",
+						"description": "Moving the data to prep layer after cleaning it",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Cleaning Customers",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"ConsolidatedCustomerData": {},
+									"ConsolidatedOrderData": {},
+									"CleanedCustomerDataToDB": {},
+									"CleanedOrderData": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "First Assesment/Prep Layer"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Cleaning Customers')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/PL_Move Orders Data to Staging')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1038,7 +1106,7 @@
 				"schema": [],
 				"typeProperties": {
 					"schema": "staging",
-					"table": "orders_consolidated"
+					"table": "Customers"
 				}
 			},
 			"dependsOn": [
@@ -1418,6 +1486,28 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DB_stagingtoprep')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('DB_stagingtoprep_properties_typeProperties_server')]",
+					"database": "[parameters('DB_stagingtoprep_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('DB_stagingtoprep_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('DB_stagingtoprep_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/LS_mergecustomers')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1429,6 +1519,370 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_Cleaning Customers')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ConsolidatedCustomerData",
+							"description": "Consolidated Customer Data is taken as source"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureSqlDatabase1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ConsolidatedOrderData",
+							"description": "Consolidated Order Data is taken as source"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "DB_stagingtoprep",
+								"type": "LinkedServiceReference"
+							},
+							"name": "CleanedCustomerDataToDB",
+							"description": "Moving the cleaned customer data in to the db"
+						},
+						{
+							"linkedService": {
+								"referenceName": "DB_stagingtoprep",
+								"type": "LinkedServiceReference"
+							},
+							"name": "CleanedOrderData",
+							"description": "Moving the cleaned order data in to the db"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RemovingNullRows",
+							"description": "Removing the Rows which contains null value"
+						},
+						{
+							"name": "IdentifyingRedundantData",
+							"description": "Adding Rnk Column Removing Duplicate Customer Records"
+						},
+						{
+							"name": "RemovingRedundantRows",
+							"description": "Deleting Duplicate Records"
+						},
+						{
+							"name": "SelectingTheNeededColumns",
+							"description": "Selecting The Needed Columns with columns 'CustomerID, FirstName, LastName, Email, PhoneNumber, Address, City, State, ZipCode, Country'"
+						},
+						{
+							"name": "DroppingNullRows",
+							"description": "Removing the Rows which contains null value"
+						},
+						{
+							"name": "FindingRedundantRecord",
+							"description": "Add Rnk column to remove duplicate records"
+						},
+						{
+							"name": "DeletingRedundantRecord",
+							"description": "Deleting Duplicate Records"
+						},
+						{
+							"name": "SelectingTheRequiredColumn",
+							"description": "selecting the needed column"
+						},
+						{
+							"name": "ChangingtheDataType"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CustomerID as string,",
+						"          FirstName as string,",
+						"          LastName as string,",
+						"          Email as string,",
+						"          PhoneNumber as string,",
+						"          Address as string,",
+						"          City as string,",
+						"          State as string,",
+						"          ZipCode as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'staging',",
+						"     tableName: 'customers_consolidated',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> ConsolidatedCustomerData",
+						"source(output(",
+						"          OrderID as string,",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Quantity as string,",
+						"          OrderTimestamp as string,",
+						"          Price as string,",
+						"          CustomerID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'staging',",
+						"     tableName: 'orders_consolidated',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> ConsolidatedOrderData",
+						"ConsolidatedCustomerData filter(!isNull(CustomerID)) ~> RemovingNullRows",
+						"RemovingNullRows window(over(CustomerID),",
+						"     asc(CustomerID, true),",
+						"     Rnk = rowNumber()) ~> IdentifyingRedundantData",
+						"IdentifyingRedundantData filter(Rnk==1) ~> RemovingRedundantRows",
+						"RemovingRedundantRows select(mapColumn(",
+						"          CustomerID,",
+						"          FirstName,",
+						"          LastName,",
+						"          Email,",
+						"          PhoneNumber,",
+						"          Address,",
+						"          City,",
+						"          State,",
+						"          ZipCode,",
+						"          Country",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectingTheNeededColumns",
+						"ConsolidatedOrderData filter(!isNull(OrderID) && !isNull(CustomerID)) ~> DroppingNullRows",
+						"DroppingNullRows window(over(OrderID),",
+						"     asc(OrderID, true),",
+						"     Rnk = rowNumber()) ~> FindingRedundantRecord",
+						"FindingRedundantRecord filter(Rnk==1) ~> DeletingRedundantRecord",
+						"DeletingRedundantRecord select(mapColumn(",
+						"          OrderID,",
+						"          ProductID,",
+						"          ProductName,",
+						"          Quantity,",
+						"          OrderTimestamp,",
+						"          Price,",
+						"          CustomerID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectingTheRequiredColumn",
+						"SelectingTheRequiredColumn cast(output(",
+						"          OrderID as integer,",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Quantity as integer,",
+						"          OrderTimestamp as date,",
+						"          Price as float,",
+						"          CustomerID as string",
+						"     ),",
+						"     errors: true) ~> ChangingtheDataType",
+						"SelectingTheNeededColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'prep',",
+						"     tableName: 'customers',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     recreate: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> CleanedCustomerDataToDB",
+						"ChangingtheDataType sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'prep',",
+						"     tableName: 'Orders',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     recreate: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> CleanedOrderData"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureSqlDatabase1')]",
+				"[concat(variables('factoryId'), '/linkedServices/DB_stagingtoprep')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_Reporting')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "DB_consolidateddb",
+								"type": "LinkedServiceReference"
+							},
+							"name": "OrdersTableinPrep"
+						},
+						{
+							"linkedService": {
+								"referenceName": "DB_consolidateddb",
+								"type": "LinkedServiceReference"
+							},
+							"name": "CustomerTableinPrep"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "DB_consolidateddb",
+								"type": "LinkedServiceReference"
+							},
+							"name": "MoveDataToReporting",
+							"description": "Creating Fact Table"
+						}
+					],
+					"transformations": [
+						{
+							"name": "JoiningOrdersAndCustomers",
+							"description": "Perform join to find the orders made by each customers"
+						},
+						{
+							"name": "SelectingRequiredColumns",
+							"description": "selecting the needed columns for fact table"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          OrderID as integer,",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Quantity as integer,",
+						"          OrderTimestamp as date,",
+						"          Price as float,",
+						"          CustomerID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'prep',",
+						"     tableName: 'Orders',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> OrdersTableinPrep",
+						"source(output(",
+						"          CustomerID as string,",
+						"          FirstName as string,",
+						"          LastName as string,",
+						"          Email as string,",
+						"          PhoneNumber as string,",
+						"          Address as string,",
+						"          City as string,",
+						"          State as string,",
+						"          ZipCode as string,",
+						"          Country as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'prep',",
+						"     tableName: 'customers',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> CustomerTableinPrep",
+						"OrdersTableinPrep, CustomerTableinPrep join(OrdersTableinPrep@CustomerID == CustomerTableinPrep@CustomerID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoiningOrdersAndCustomers",
+						"JoiningOrdersAndCustomers select(mapColumn(",
+						"          CustomerID = CustomerTableinPrep@CustomerID,",
+						"          OrderID,",
+						"          FirstName,",
+						"          ProductID,",
+						"          ProductName,",
+						"          Quantity,",
+						"          Price",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectingRequiredColumns",
+						"SelectingRequiredColumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'reporting',",
+						"     tableName: 'OrdersByCustomer',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     recreate: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> MoveDataToReporting"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DB_consolidateddb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Move Data to Reporting')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "MovingDataFromPrepToReporting",
+						"description": "move the data to reporting layer",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Reporting",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"OrdersTableinPrep": {},
+									"CustomerTableinPrep": {},
+									"MoveDataToReporting": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "First Assesment/Reporting Layer"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Reporting')]"
+			]
 		}
 	]
 }

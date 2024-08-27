@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'DB_consolidateddb'"
 		},
+		"DB_stagingtoprep_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'DB_stagingtoprep'"
+		},
 		"LS_mergecustomers_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'LS_mergecustomers'"
@@ -40,6 +44,18 @@
 			"defaultValue": "sqldb-jmanTraining"
 		},
 		"DB_consolidateddb_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "jenisha"
+		},
+		"DB_stagingtoprep_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "jman-training.database.windows.net"
+		},
+		"DB_stagingtoprep_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb-jmanTraining"
+		},
+		"DB_stagingtoprep_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "jenisha"
 		},
@@ -76,6 +92,9 @@
 					"DB_consolidateddb_password": {
 						"value": "[parameters('DB_consolidateddb_password')]"
 					},
+					"DB_stagingtoprep_password": {
+						"value": "[parameters('DB_stagingtoprep_password')]"
+					},
 					"LS_mergecustomers_connectionString": {
 						"value": "[parameters('LS_mergecustomers_connectionString')]"
 					},
@@ -96,10 +115,39 @@
 					},
 					"DB_consolidateddb_properties_typeProperties_userName": {
 						"value": "[parameters('DB_consolidateddb_properties_typeProperties_userName')]"
+					},
+					"DB_stagingtoprep_properties_typeProperties_server": {
+						"value": "[parameters('DB_stagingtoprep_properties_typeProperties_server')]"
+					},
+					"DB_stagingtoprep_properties_typeProperties_database": {
+						"value": "[parameters('DB_stagingtoprep_properties_typeProperties_database')]"
+					},
+					"DB_stagingtoprep_properties_typeProperties_userName": {
+						"value": "[parameters('DB_stagingtoprep_properties_typeProperties_userName')]"
 					}
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "adf-jmantraining-dev_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adf-jmantraining-dev_ArmTemplate_0')]"
+			]
 		}
 	]
 }

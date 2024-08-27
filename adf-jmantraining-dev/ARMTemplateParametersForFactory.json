@@ -11,6 +11,9 @@
 		"DB_consolidateddb_password": {
 			"value": ""
 		},
+		"DB_stagingtoprep_password": {
+			"value": ""
+		},
 		"LS_mergecustomers_connectionString": {
 			"value": ""
 		},
@@ -30,6 +33,15 @@
 			"value": "sqldb-jmanTraining"
 		},
 		"DB_consolidateddb_properties_typeProperties_userName": {
+			"value": "jenisha"
+		},
+		"DB_stagingtoprep_properties_typeProperties_server": {
+			"value": "jman-training.database.windows.net"
+		},
+		"DB_stagingtoprep_properties_typeProperties_database": {
+			"value": "sqldb-jmanTraining"
+		},
+		"DB_stagingtoprep_properties_typeProperties_userName": {
 			"value": "jenisha"
 		}
 	}
