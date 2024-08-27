@@ -1,0 +1,19 @@
+{
+	"name": "DB_consolidatedData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DB_consolidateddb",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Ass_Datasets"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "staging",
+			"table": "customers_consolidated"
+		}
+	}
+}
