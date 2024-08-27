@@ -12,7 +12,7 @@
 		"type": "AzureSqlTable",
 		"schema": [],
 		"typeProperties": {
-			"schema": "prep",
+			"schema": "staging",
 			"table": "Customers"
 		}
 	}

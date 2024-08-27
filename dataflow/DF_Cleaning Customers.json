@@ -24,7 +24,7 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "DB_consolidateddb",
+						"referenceName": "DB_stagingtoprep",
 						"type": "LinkedServiceReference"
 					},
 					"name": "CleanedCustomerDataToDB",
@@ -32,7 +32,7 @@
 				},
 				{
 					"linkedService": {
-						"referenceName": "AzureSqlDatabase1",
+						"referenceName": "DB_stagingtoprep",
 						"type": "LinkedServiceReference"
 					},
 					"name": "CleanedOrderData",
