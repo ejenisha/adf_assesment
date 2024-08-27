@@ -1,0 +1,111 @@
+{
+	"name": "DF_Reporting",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "DB_consolidateddb",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrdersTableinPrep"
+				},
+				{
+					"linkedService": {
+						"referenceName": "DB_consolidateddb",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CustomerTableinPrep"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "DB_consolidateddb",
+						"type": "LinkedServiceReference"
+					},
+					"name": "MoveDataToReporting",
+					"description": "Creating Fact Table"
+				}
+			],
+			"transformations": [
+				{
+					"name": "JoiningOrdersAndCustomers",
+					"description": "Perform join to find the orders made by each customers"
+				},
+				{
+					"name": "SelectingRequiredColumns",
+					"description": "selecting the needed columns for fact table"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          OrderID as integer,",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Quantity as integer,",
+				"          OrderTimestamp as date,",
+				"          Price as float,",
+				"          CustomerID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'prep',",
+				"     tableName: 'Orders',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> OrdersTableinPrep",
+				"source(output(",
+				"          CustomerID as string,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          Email as string,",
+				"          PhoneNumber as string,",
+				"          Address as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'prep',",
+				"     tableName: 'customers',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> CustomerTableinPrep",
+				"OrdersTableinPrep, CustomerTableinPrep join(OrdersTableinPrep@CustomerID == CustomerTableinPrep@CustomerID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> JoiningOrdersAndCustomers",
+				"JoiningOrdersAndCustomers select(mapColumn(",
+				"          CustomerID = CustomerTableinPrep@CustomerID,",
+				"          OrderID,",
+				"          FirstName,",
+				"          ProductID,",
+				"          ProductName,",
+				"          Quantity,",
+				"          Price",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectingRequiredColumns",
+				"SelectingRequiredColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'reporting',",
+				"     tableName: 'OrdersByCustomer',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     recreate: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> MoveDataToReporting"
+			]
+		}
+	}
+}
