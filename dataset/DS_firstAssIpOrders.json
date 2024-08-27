@@ -1,0 +1,23 @@
+{
+	"name": "DS_firstAssIpOrders",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_mergecustomers",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Ass_Datasets"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "sheet1",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "crfirstassinput001"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}

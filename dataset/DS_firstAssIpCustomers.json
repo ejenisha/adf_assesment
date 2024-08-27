@@ -1,0 +1,25 @@
+{
+	"name": "DS_firstAssIpCustomers",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_mergecustomers",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Ass_Datasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "crfirstassinput001"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
