@@ -13,7 +13,7 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": "staging",
-			"table": "customers_consolidated"
+			"table": "orders_consolidated"
 		}
 	}
 }

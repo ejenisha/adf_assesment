@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "consolidated_customers",
+				"fileName": "consolidated_orders",
 				"container": "crfirstassoutput001"
 			},
 			"columnDelimiter": ",",
