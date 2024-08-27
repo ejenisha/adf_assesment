@@ -13,7 +13,7 @@
 		"schema": [],
 		"typeProperties": {
 			"schema": "staging",
-			"table": "Customers"
+			"table": "store"
 		}
 	}
 }
