@@ -12,8 +12,8 @@
 		"type": "AzureSqlTable",
 		"schema": [],
 		"typeProperties": {
-			"schema": "staging",
-			"table": "orders_consolidated"
+			"schema": "prep",
+			"table": "Customers"
 		}
 	}
 }

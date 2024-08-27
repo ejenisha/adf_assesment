@@ -1,0 +1,192 @@
+{
+	"name": "DF_Cleaning Customers",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ConsolidatedCustomerData",
+					"description": "Consolidated Customer Data is taken as source"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ConsolidatedOrderData",
+					"description": "Consolidated Order Data is taken as source"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "DB_consolidateddb",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CleanedCustomerDataToDB",
+					"description": "Moving the cleaned customer data in to the db"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureSqlDatabase1",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CleanedOrderData",
+					"description": "Moving the cleaned order data in to the db"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RemovingNullRows",
+					"description": "Removing the Rows which contains null value"
+				},
+				{
+					"name": "IdentifyingRedundantData",
+					"description": "Adding Rnk Column Removing Duplicate Customer Records"
+				},
+				{
+					"name": "RemovingRedundantRows",
+					"description": "Deleting Duplicate Records"
+				},
+				{
+					"name": "SelectingTheNeededColumns",
+					"description": "Selecting The Needed Columns with columns 'CustomerID, FirstName, LastName, Email, PhoneNumber, Address, City, State, ZipCode, Country'"
+				},
+				{
+					"name": "DroppingNullRows",
+					"description": "Removing the Rows which contains null value"
+				},
+				{
+					"name": "FindingRedundantRecord",
+					"description": "Add Rnk column to remove duplicate records"
+				},
+				{
+					"name": "DeletingRedundantRecord",
+					"description": "Deleting Duplicate Records"
+				},
+				{
+					"name": "SelectingTheRequiredColumn",
+					"description": "selecting the needed column"
+				},
+				{
+					"name": "ChangingtheDataType"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          CustomerID as string,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          Email as string,",
+				"          PhoneNumber as string,",
+				"          Address as string,",
+				"          City as string,",
+				"          State as string,",
+				"          ZipCode as string,",
+				"          Country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'staging',",
+				"     tableName: 'customers_consolidated',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ConsolidatedCustomerData",
+				"source(output(",
+				"          OrderID as string,",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Quantity as string,",
+				"          OrderTimestamp as string,",
+				"          Price as string,",
+				"          CustomerID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'staging',",
+				"     tableName: 'orders_consolidated',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> ConsolidatedOrderData",
+				"ConsolidatedCustomerData filter(!isNull(CustomerID)) ~> RemovingNullRows",
+				"RemovingNullRows window(over(CustomerID),",
+				"     asc(CustomerID, true),",
+				"     Rnk = rowNumber()) ~> IdentifyingRedundantData",
+				"IdentifyingRedundantData filter(Rnk==1) ~> RemovingRedundantRows",
+				"RemovingRedundantRows select(mapColumn(",
+				"          CustomerID,",
+				"          FirstName,",
+				"          LastName,",
+				"          Email,",
+				"          PhoneNumber,",
+				"          Address,",
+				"          City,",
+				"          State,",
+				"          ZipCode,",
+				"          Country",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectingTheNeededColumns",
+				"ConsolidatedOrderData filter(!isNull(OrderID) && !isNull(CustomerID)) ~> DroppingNullRows",
+				"DroppingNullRows window(over(OrderID),",
+				"     asc(OrderID, true),",
+				"     Rnk = rowNumber()\r",
+				") ~> FindingRedundantRecord",
+				"FindingRedundantRecord filter(Rnk==1) ~> DeletingRedundantRecord",
+				"DeletingRedundantRecord select(mapColumn(",
+				"          OrderID,",
+				"          ProductID,",
+				"          ProductName,",
+				"          Quantity,",
+				"          OrderTimestamp,",
+				"          Price,",
+				"          CustomerID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectingTheRequiredColumn",
+				"SelectingTheRequiredColumn cast(output(",
+				"          OrderID as integer,",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Quantity as integer,",
+				"          OrderTimestamp as date,",
+				"          Price as float,",
+				"          CustomerID as string",
+				"     ),",
+				"     errors: true) ~> ChangingtheDataType",
+				"SelectingTheNeededColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: '',",
+				"     tableName: 'customers',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     recreate: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> CleanedCustomerDataToDB",
+				"ChangingtheDataType sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'prep',",
+				"     tableName: 'Orders',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     recreate: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> CleanedOrderData"
+			]
+		}
+	}
+}

@@ -1,0 +1,36 @@
+{
+	"name": "PL_Move Data to Prep",
+	"properties": {
+		"activities": [
+			{
+				"name": "Move Data from Staging to Prep",
+				"description": "Moving the data to prep layer after cleaning it",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "DF_Cleaning Customers",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"folder": {
+			"name": "First Assesment/Prep Layer"
+		},
+		"annotations": []
+	}
+}
