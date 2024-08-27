@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-jmantraining-dev"
+		},
+		"AzureSqlDatabase1_password": {
+			"value": ""
+		},
+		"DB_consolidateddb_password": {
+			"value": ""
+		},
+		"LS_mergecustomers_connectionString": {
+			"value": ""
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"value": "jman-training.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"value": "sqldb-jmanTraining"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"value": "jenisha"
+		},
+		"DB_consolidateddb_properties_typeProperties_server": {
+			"value": "jman-training.database.windows.net"
+		},
+		"DB_consolidateddb_properties_typeProperties_database": {
+			"value": "sqldb-jmanTraining"
+		},
+		"DB_consolidateddb_properties_typeProperties_userName": {
+			"value": "jenisha"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}
